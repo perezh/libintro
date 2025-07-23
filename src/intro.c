@@ -54,7 +54,7 @@
  */
 static int remove_trailing_newline (char *line, int size) {
     int index = size;
-    if (line[index - 1] == '\n') {
+    if (index > 0 && line[index - 1] == '\n') {
         line[index - 1] = '\0';
         index--;
     }
@@ -224,13 +224,12 @@ double get_user_double (void) {
 
     double result = 0.0;
 
-    int digits = 0;
     char *endptr, *line = NULL;
     size_t len = 0;
 
     errno = 0;    /* To distinguish success/failure after call */
     int chars = getline (&line, &len, stdin);
-    if (digits < 0) {
+    if (chars < 0) {
         ERROR ("getline");
     }
     // Remove trailing newline, if exists
@@ -329,6 +328,9 @@ void finalize (void) {
             free (strings[i]);
         }
         free (strings);
+        // Reset variables
+        strings = NULL;
+        allocations = 0;
     }
 }
 
@@ -340,7 +342,7 @@ void finalize (void) {
  */
 void clear_terminal (void) {
     printf ("\n"); // Output any remaining data in buffer
-    int result = system ("clear"); // OS-dependent
+    int result = system ("clear"); // OS-dependent, use #ifdef __linux__ / __WIN32__ to support Windows
     if (result == -1) {
         fprintf (stderr,
                  "This command is os-dependent and is not supported by your system\n");
